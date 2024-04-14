@@ -42,6 +42,8 @@ github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcU
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=
 github.com/zumosik/grpc_chat_protos v0.0.0-20240414071945-adef45d4b5af h1:rp3oRSE0oa/pAlbva88t7oWLcBv/AFgOB7Hcd3uVkwg=
 github.com/zumosik/grpc_chat_protos v0.0.0-20240414071945-adef45d4b5af/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
+github.com/zumosik/grpc_chat_protos v0.0.0-20240414145910-f4c85f459572 h1:IC+mXTxcoStnQAI25xW4xfvEoos44ZaGn3P+Gqw/lD4=
+github.com/zumosik/grpc_chat_protos v0.0.0-20240414145910-f4c85f459572/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
 golang.org/x/crypto v0.22.0 h1:g1v0xeRhjcugydODzvb3mEM9SQ0HGp9s/nh3COQ/C30=
 golang.org/x/crypto v0.22.0/go.mod h1:vr6Su+7cTlO45qkww3VDJlzDn0ctJvRgYbC2NvXHt+M=
 golang.org/x/net v0.24.0 h1:1PcaxkF854Fu3+lvBIx5SYn9wRlBzzcnHZSiaFFAb0w=

@@ -3,7 +3,7 @@ package service
 import (
 	"auth_service/internal/models"
 	"context"
-	"github.com/zumosik/grpc_chat_protos/gen/go/auth"
+	"github.com/zumosik/grpc_chat_protos/go/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -6,3 +6,4 @@ storage_cfg:
   postgres_url: "postgres://postgres:postgres@db:5432/postgres?sslmode=disable" # for docker-compose only
 tokens:
   token_secret: "vBDndXq0555gsKpLrRQTJrDgYadmfYew"
+  token_ttl: 24h

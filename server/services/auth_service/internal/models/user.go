@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/zumosik/grpc_chat_protos/gen/go/auth"
+	"github.com/zumosik/grpc_chat_protos/go/auth"
 	"golang.org/x/crypto/bcrypt"
 	"time"
 )
