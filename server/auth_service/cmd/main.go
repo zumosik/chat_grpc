@@ -3,6 +3,7 @@ package main
 import (
 	"auth_service/internal/config"
 	"auth_service/internal/lib/logger/slogpretty"
+	"auth_service/internal/lib/token"
 	"auth_service/internal/service"
 	"auth_service/internal/storage/sql/postgres"
 	"context"
@@ -41,10 +42,10 @@ func main() {
 	}
 
 	storage := postgres.New(db)
-
 	log := setupLogger(cfg.Env)
+	tokenManager := token.NewManager(cfg.Tokens.TokenSecret, cfg.Tokens.TokenTTL)
 
-	s := service.New(storage, log)
+	s := service.New(storage, log, tokenManager)
 
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(

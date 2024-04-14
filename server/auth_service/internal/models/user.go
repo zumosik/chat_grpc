@@ -3,20 +3,21 @@ package models
 import (
 	"github.com/zumosik/grpc_chat_protos/gen/go/auth"
 	"golang.org/x/crypto/bcrypt"
+	"time"
 )
 
 type User struct {
-	ID                string `db:"id"`
-	Username          string `db:"username"`
-	Password          string `db:"password"`
-	Email             string `db:"email"`
-	EncryptedPassword []byte `db:"encrypted_password"`
+	ID                string    `db:"id"`
+	Username          string    `db:"username"`
+	Password          string    `db:"-"`
+	Email             string    `db:"email"`
+	EncryptedPassword []byte    `db:"encrypted_password"`
+	CreatedAt         time.Time `db:"created_at"`
 }
 
 // ToAuthUser converts the *User to an *auth.User
-func (u *User) ToAuthUser() *auth.User {
-	return &auth.User{
-		Id:       u.ID,
+func (u *User) ToAuthUser() *auth.PublicUser {
+	return &auth.PublicUser{
 		Username: u.Username,
 		Email:    u.Email,
 	}

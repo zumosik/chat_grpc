@@ -10,14 +10,14 @@ import (
 	"log/slog"
 )
 
-// TODO: add logs
+// TODO: add validation
 
 type Storage interface {
 	CreateUser(ctx context.Context, user *models.User) error
 	UpdateUser(ctx context.Context, user *models.User) error
 	DeleteUser(ctx context.Context, id string) error
 
-	GetUserID(ctx context.Context, id string) (*models.User, error)
+	GetUserByID(ctx context.Context, id string) (*models.User, error)
 
 	FindUserByEmail(ctx context.Context, email string) (*models.User, error)
 	FindUserByUsername(ctx context.Context, username string) (*models.User, error)
@@ -37,10 +37,11 @@ type Service struct {
 	auth.UnimplementedAuthServiceServer
 }
 
-func New(storage Storage, logger *slog.Logger) *Service {
+func New(storage Storage, logger *slog.Logger, tokenManager TokenManager) *Service {
 	return &Service{
-		st: storage,
-		l:  logger,
+		st:           storage,
+		l:            logger,
+		tokenManager: tokenManager,
 	}
 }
 
@@ -52,14 +53,14 @@ func (s *Service) Login(ctx context.Context, request *auth.LoginRequest) (*auth.
 	// 1. Find user by username
 	u, err := s.st.FindUserByUsername(ctx, request.Username)
 	if err != nil {
-		s.l.Error("Error finding user by username", slog.String("error", err.Error()))
+		s.l.Error("Cant find user by username", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	if u == nil {
 		// 1.1 If user not found by email
 		u, err = s.st.FindUserByEmail(ctx, request.Username)
 		if err != nil {
-			s.l.Error("Error finding user by email", slog.String("error", err.Error()))
+			s.l.Error("Cant find user by email", slog.String("error", err.Error()))
 			return nil, status.Error(codes.Internal, "internal error")
 		}
 	}
@@ -74,7 +75,7 @@ func (s *Service) Login(ctx context.Context, request *auth.LoginRequest) (*auth.
 	// 3. Generate token
 	token, err := s.tokenManager.CreateToken(u)
 	if err != nil {
-		s.l.Error("Error creating tokens", slog.String("error", err.Error()))
+		s.l.Error("Cant create token", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -88,6 +89,7 @@ func (s *Service) CreateUser(ctx context.Context, request *auth.CreateUserReques
 	// 1. Check if username or email already exists
 	u, err := s.st.FindUserByEmail(ctx, request.Email)
 	if err != nil {
+		s.l.Error("Cant find user by email", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	if u != nil {
@@ -95,6 +97,7 @@ func (s *Service) CreateUser(ctx context.Context, request *auth.CreateUserReques
 	}
 	u, err = s.st.FindUserByUsername(ctx, request.Username)
 	if err != nil {
+		s.l.Error("Cant find user by username", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	if u != nil {
@@ -109,11 +112,13 @@ func (s *Service) CreateUser(ctx context.Context, request *auth.CreateUserReques
 	// 3. Hash password
 	err = user.HashPassword()
 	if err != nil {
+		s.l.Error("Cant hash password", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	// 5. Save user
 	err = s.st.CreateUser(ctx, &user)
 	if err != nil {
+		s.l.Error("Cant create user", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -140,6 +145,7 @@ func (s *Service) UpdateUser(ctx context.Context, request *auth.UpdateUserReques
 	// 2. Hash password
 	err = user.HashPassword()
 	if err != nil {
+		s.l.Error("Cant hash password", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -150,7 +156,7 @@ func (s *Service) UpdateUser(ctx context.Context, request *auth.UpdateUserReques
 
 	return &auth.UpdateUserResponse{
 		Success: true,
-		User:    user.ToAuthUser(),
+		NewUser: user.ToAuthUser(),
 	}, nil
 }
 
@@ -163,12 +169,12 @@ func (s *Service) DeleteUser(ctx context.Context, request *auth.DeleteUserReques
 	// 2. Delete user by id
 	err = s.st.DeleteUser(ctx, id)
 	if err != nil {
+		s.l.Error("Cant delete user", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
 	return &auth.DeleteUserResponse{
 		Success: true,
-		Message: id,
 	}, nil
 }
 
@@ -179,16 +185,17 @@ func (s *Service) GetUserByToken(ctx context.Context, request *auth.GetUserByTok
 		return nil, status.Error(codes.InvalidArgument, "invalid token")
 	}
 	// 2. Find user by id
-	u, err := s.st.GetUserID(ctx, id)
+	u, err := s.st.GetUserByID(ctx, id)
 	if err != nil {
+		s.l.Error("Cant get user by id", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	if u == nil {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 	return &auth.GetUserResponse{
-		Success: true,
-		User:    u.ToAuthUser(),
+		Success:    true,
+		PublicUser: u.ToAuthUser(),
 	}, nil
 }
 
@@ -196,14 +203,15 @@ func (s *Service) GetUserByEmail(ctx context.Context, request *auth.GetUserByEma
 	// 1. Find user by email
 	u, err := s.st.FindUserByEmail(ctx, request.Email)
 	if err != nil {
+		s.l.Error("Cant get user by email", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	if u == nil {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 	return &auth.GetUserResponse{
-		Success: true,
-		User:    u.ToAuthUser(),
+		Success:    true,
+		PublicUser: u.ToAuthUser(),
 	}, nil
 
 }
@@ -212,13 +220,14 @@ func (s *Service) GetUserByUsername(ctx context.Context, request *auth.GetUserBy
 	// 1. Find user by username
 	u, err := s.st.FindUserByUsername(ctx, request.Username)
 	if err != nil {
+		s.l.Error("Cant get user by username", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 	if u == nil {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 	return &auth.GetUserResponse{
-		Success: true,
-		User:    u.ToAuthUser(),
+		Success:    true,
+		PublicUser: u.ToAuthUser(),
 	}, nil
 }

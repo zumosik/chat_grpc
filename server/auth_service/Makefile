@@ -1,4 +1,5 @@
 APP_NAME = app
+POSTGRES_MIGARTE_DB=postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable
 
 all: build run
 
@@ -13,3 +14,12 @@ run: build
 .PHONY: clean
 clean:
 	rm -f $(APP_NAME)
+
+up:
+	goose -dir migrations postgres $(POSTGRES_MIGARTE_DB) up
+
+down:
+	goose -dir migrations postgres $(POSTGRES_MIGARTE_DB) down
+
+gen_mocks:
+	cd internal/service && mackery --all

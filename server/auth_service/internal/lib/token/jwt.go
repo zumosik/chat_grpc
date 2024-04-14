@@ -11,7 +11,7 @@ type Manager struct {
 	expirationTime time.Duration
 }
 
-func NewTokenService(secretKey string, expirationTime time.Duration) *Manager {
+func NewManager(secretKey string, expirationTime time.Duration) *Manager {
 	return &Manager{secretKey: []byte(secretKey), expirationTime: expirationTime}
 }
 
