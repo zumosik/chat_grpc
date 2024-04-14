@@ -11,10 +11,17 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
+  envoy:
+    image: envoyproxy/envoy-dev:e4955aed5694f9935d674419dbb364e744f697b4
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "9901:9901"
+      - "7771:7771"
   auth_service:
     depends_on:
-      - db
+      - db # wait for db to be "ready" before starting
+      - envoy # wait for envoy to be "ready" before starting
     build:
       context: ./services/auth_service
       dockerfile: Dockerfile
