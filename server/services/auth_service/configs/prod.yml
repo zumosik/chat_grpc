@@ -1,0 +1,8 @@
+env: "local"
+grpc:
+  port: 5051
+  timeout: 10s
+storage_cfg:
+  postgres_url: "postgres://postgres:postgres@db:5432/postgres?sslmode=disable" # for docker-compose only
+tokens:
+  token_secret: "vBDndXq0555gsKpLrRQTJrDgYadmfYew"

@@ -1,8 +1,0 @@
-env: "local"
-grpc:
-  port: 44044
-  timeout: 5s
-storage_cfg:
-  postgres_url: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
-tokens:
-  token_secret: "some_random_str"

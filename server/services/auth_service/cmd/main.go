@@ -8,17 +8,18 @@ import (
 	"auth_service/internal/storage/sql/postgres"
 	"context"
 	"fmt"
+	"log/slog"
+	"net"
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log/slog"
-	"net"
-	"os"
-	"os/signal"
-	"syscall"
 
 	_ "github.com/lib/pq"
 )
@@ -34,11 +35,11 @@ func main() {
 
 	db, err := sqlx.Open("postgres", cfg.Storage.PostgresURl)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to open db (%s): %v", cfg.Storage.PostgresURl, err))
 	}
 	err = db.Ping()
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("failed to open db (%s): %v", cfg.Storage.PostgresURl, err))
 	}
 
 	storage := postgres.New(db)
