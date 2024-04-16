@@ -1,0 +1,7 @@
+env: local
+grpc:
+  port: 1442
+email:
+  port: 572
+  from: "..."
+  password: "..."

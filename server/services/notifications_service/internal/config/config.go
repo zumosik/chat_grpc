@@ -4,27 +4,22 @@ import (
 	"flag"
 	"github.com/ilyakaznacheev/cleanenv"
 	"os"
-	"time"
 )
 
 type Config struct {
-	Env     string        `yaml:"env" env-default:"local"`
-	Storage StorageConfig `yaml:"storage_cfg" env-required:"true"`
-	GRPC    GRPCConfig    `yaml:"grpc" env-required:"true"`
-	Tokens  Tokens        `yaml:"tokens" env-required:"true"`
+	Env   string      `yaml:"env" env-default:"local"`
+	GRPC  GRPCConfig  `yaml:"grpc" env-required:"true"`
+	Email EmailConfig `yaml:"email" env-required:"true"`
 }
 
 type GRPCConfig struct {
 	Port int `yaml:"port" env-required:"true"`
 }
 
-type StorageConfig struct {
-	PostgresURl string `yaml:"postgres_url" env-required:"true"`
-}
-
-type Tokens struct {
-	TokenSecret string        `yaml:"token_secret" env-required:"true"`
-	TokenTTL    time.Duration `yaml:"token_ttl" env-default:"1h"`
+type EmailConfig struct {
+	Port     int    `yaml:"port" env-required:"true"`
+	From     string `yaml:"from" env-required:"true"`
+	Password string `yaml:"password" env-required:"true"`
 }
 
 func MustLoad() *Config {
