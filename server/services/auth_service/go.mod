@@ -11,7 +11,7 @@ require (
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.2.0
 	github.com/stretchr/testify v1.8.4
-	github.com/zumosik/grpc_chat_protos v0.0.0-20240414145910-f4c85f459572
+	github.com/zumosik/grpc_chat_protos v0.0.0-20240417173435-66e0ca13dc28
 	golang.org/x/crypto v0.22.0
 	google.golang.org/grpc v1.63.2
 )

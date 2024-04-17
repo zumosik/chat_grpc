@@ -24,13 +24,26 @@ func (s *Storage) CreateUser(ctx context.Context, user *models.User) error {
 	// create id
 	user.ID = uuid.New().String()
 
-	query := `INSERT INTO users (id, username, email, encrypted_password) VALUES (:id, :username, :email, :encrypted_password)`
+	query :=
+		`
+INSERT INTO users (id, username, email, encrypted_password, confirmed_email, confirmed_email)
+VALUES (:id, :username, :email, :encrypted_password, :confirmed_email, :created_at)
+`
 	_, err := s.db.NamedExecContext(ctx, query, user)
 	return err
 }
 
 func (s *Storage) UpdateUser(ctx context.Context, user *models.User) error {
-	query := `UPDATE users SET username = :username, email = :email, encrypted_password = :encrypted_password WHERE id = :id`
+	query :=
+		`
+UPDATE users SET username = :username,
+ 	email = :email,
+ 	encrypted_password = :encrypted_password,
+ 	confirmed_email = :confirmed_email,
+ 	created_at = :created_at 
+	WHERE id = :id
+	`
+
 	_, err := s.db.NamedExecContext(ctx, query, user)
 	return err
 }

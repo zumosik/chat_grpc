@@ -1,6 +1,7 @@
 package service
 
 import (
+	"auth_service/internal/client/notifications"
 	"auth_service/internal/models"
 	"context"
 	"github.com/zumosik/grpc_chat_protos/go/auth"
@@ -12,7 +13,12 @@ import (
 
 // TODO: add validation
 
-type Storage interface {
+type EmailTokenStorage interface {
+	CreateEmailToken(ctx context.Context, token, userID string) error
+	GetUserIDByToken(ctx context.Context, token string) (string, error)
+}
+
+type UserStorage interface {
 	CreateUser(ctx context.Context, user *models.User) error
 	UpdateUser(ctx context.Context, user *models.User) error
 	DeleteUser(ctx context.Context, id string) error
@@ -29,19 +35,26 @@ type TokenManager interface {
 }
 
 type Service struct {
-	st           Storage
-	tokenManager TokenManager
+	st           UserStorage
+	stEmailToken EmailTokenStorage
 
-	l *slog.Logger
+	tokenManager TokenManager
+	l            *slog.Logger
+
+	notificationService *notifications.Client
 
 	auth.UnimplementedAuthServiceServer
 }
 
-func New(storage Storage, logger *slog.Logger, tokenManager TokenManager) *Service {
+func New(logger *slog.Logger, storage UserStorage, stEmailToken EmailTokenStorage, tokenManager TokenManager, notificationService *notifications.Client) *Service {
 	return &Service{
 		st:           storage,
+		stEmailToken: stEmailToken,
+
 		l:            logger,
 		tokenManager: tokenManager,
+
+		notificationService: notificationService,
 	}
 }
 
@@ -119,6 +132,25 @@ func (s *Service) CreateUser(ctx context.Context, request *auth.CreateUserReques
 	err = s.st.CreateUser(ctx, &user)
 	if err != nil {
 		s.l.Error("Cant create user", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	// 6. Create token for email confirm
+	token, err := s.tokenManager.CreateToken(u)
+	if err != nil {
+		s.l.Error("Cant create token for email confirm", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	err = s.stEmailToken.CreateEmailToken(ctx, string(token), user.ID)
+	if err != nil {
+		s.l.Error("Cant save to storage token for email confirm", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	err = s.notificationService.SendEmailConfirmationEmail(ctx, string(token), user.Email)
+	if err != nil {
+		s.l.Error("Cant use SendEmailConfirmationEmail (notifications service issue)", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
@@ -229,5 +261,37 @@ func (s *Service) GetUserByUsername(ctx context.Context, request *auth.GetUserBy
 	return &auth.GetUserResponse{
 		Success:    true,
 		PublicUser: u.ToAuthUser(),
+	}, nil
+}
+
+func (s *Service) VerifyUser(ctx context.Context, req *auth.VerifyUserRequest) (*auth.VerifyUserResponse, error) {
+	// 1. Find userID using token
+	userID, err := s.stEmailToken.GetUserIDByToken(ctx, req.VerificationCode)
+	if err != nil {
+		s.l.Error("Cant get userID by email verification code", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	// 2. Find user by userID
+	u, err := s.st.GetUserByID(ctx, userID)
+	if err != nil {
+		s.l.Error("Cant get user by id", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	if u == nil {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	// 3. Update user
+	u.ConfirmedEmail = true
+	err = s.st.UpdateUser(ctx, u)
+	if err != nil {
+		s.l.Error("Cant update user", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	return &auth.VerifyUserResponse{
+		Success: true,
 	}, nil
 }
