@@ -18,10 +18,20 @@ services:
     ports:
       - "9901:9901"
       - "7771:7771"
+
+  notifications_service:
+    build:
+      context: ./services/notifications_service
+      dockerfile: Dockerfile
+      args:
+        config_path_from: configs/prod.yml
+    ports:
+      - 5052:5052
   auth_service:
     depends_on:
       - db # wait for db to be "ready" before starting
       - envoy # wait for envoy to be "ready" before starting
+      - notifications_service # wait for notifications_service to be "ready" before starting
     build:
       context: ./services/auth_service
       dockerfile: Dockerfile

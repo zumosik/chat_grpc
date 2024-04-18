@@ -58,8 +58,6 @@ func main() {
 
 		log.Info("Starting gRPC server", slog.String("port", fmt.Sprintf(":%d", cfg.GRPC.Port)))
 
-		log.Info(cfg.Email.From, cfg.Email.Password, cfg.Email.Port) // TODO: delete
-
 		if err := gRPCServer.Serve(l); err != nil {
 			log.Error("failed to serve", slog.String("error", err.Error()))
 		}

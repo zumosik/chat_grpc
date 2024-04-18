@@ -1,8 +1,8 @@
 env: local
 grpc:
-  port: 1442
+  port: 5052
 email:
   smtp: "smtp.gmail.com"
-  port: 572
+  port: 587
   from: "..."
   password: "..."

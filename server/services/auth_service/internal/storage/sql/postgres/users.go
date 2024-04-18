@@ -26,7 +26,7 @@ func (s *Storage) CreateUser(ctx context.Context, user *models.User) error {
 
 	query :=
 		`
-INSERT INTO users (id, username, email, encrypted_password, confirmed_email, confirmed_email)
+INSERT INTO users (id, username, email, encrypted_password, confirmed_email, created_at)
 VALUES (:id, :username, :email, :encrypted_password, :confirmed_email, :created_at)
 `
 	_, err := s.db.NamedExecContext(ctx, query, user)

@@ -2,10 +2,11 @@ package notifications
 
 import (
 	"context"
+	"log/slog"
+
 	"github.com/zumosik/grpc_chat_protos/go/notifications"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-	"log/slog"
 )
 
 type Client struct {
@@ -26,6 +27,8 @@ func Connect(log *slog.Logger, add string) (*Client, error) {
 		client: client,
 		l:      log,
 	}
+
+	log.Info("Connected to notifications service", slog.String("address", add))
 
 	return c, nil
 }

@@ -4,11 +4,13 @@ import (
 	"auth_service/internal/client/notifications"
 	"auth_service/internal/models"
 	"context"
+	"fmt"
+	"log/slog"
+
 	"github.com/zumosik/grpc_chat_protos/go/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"log/slog"
 )
 
 // TODO: add validation
@@ -123,20 +125,27 @@ func (s *Service) CreateUser(ctx context.Context, request *auth.CreateUserReques
 		Email:    request.Email,
 	}
 	// 3. Hash password
+	s.l.Debug("starting 3")
+
 	err = user.HashPassword()
 	if err != nil {
 		s.l.Error("Cant hash password", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
-	// 5. Save user
+
+	// 4. Save user
 	err = s.st.CreateUser(ctx, &user)
 	if err != nil {
 		s.l.Error("Cant create user", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 
-	// 6. Create token for email confirm
-	token, err := s.tokenManager.CreateToken(u)
+	// 5. Create token for email confirm
+	s.l.Debug("starting 5")
+	s.l.Debug(fmt.Sprint(s.tokenManager == nil))
+	s.l.Debug(fmt.Sprint(u == nil))
+
+	token, err := s.tokenManager.CreateToken(&user)
 	if err != nil {
 		s.l.Error("Cant create token for email confirm", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
@@ -292,6 +301,7 @@ func (s *Service) VerifyUser(ctx context.Context, req *auth.VerifyUserRequest) (
 	}
 
 	return &auth.VerifyUserResponse{
-		Success: true,
+		Success:    true,
+		PublicUser: u.ToAuthUser(),
 	}, nil
 }

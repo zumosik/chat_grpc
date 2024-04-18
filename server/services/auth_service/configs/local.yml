@@ -6,3 +6,5 @@ storage_cfg:
   postgres_url: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 tokens:
   token_secret: "some_random_str"
+other_services:
+  notification_service_url: "notifications_service:5052"

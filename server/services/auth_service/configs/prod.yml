@@ -7,3 +7,5 @@ storage_cfg:
 tokens:
   token_secret: "vBDndXq0555gsKpLrRQTJrDgYadmfYew"
   token_ttl: 24h
+other_services:
+  notification_service_url: "notifications_service:5052"
