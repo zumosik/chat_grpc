@@ -2,8 +2,9 @@ package config
 
 import (
 	"flag"
-	"github.com/ilyakaznacheev/cleanenv"
 	"os"
+
+	"github.com/ilyakaznacheev/cleanenv"
 )
 
 type Config struct {
@@ -17,6 +18,7 @@ type GRPCConfig struct {
 }
 
 type EmailConfig struct {
+	SMTP     string `yaml:"smtp" env-required:"true"`
 	Port     int    `yaml:"port" env-required:"true"`
 	From     string `yaml:"from" env-required:"true"`
 	Password string `yaml:"password" env-required:"true"`

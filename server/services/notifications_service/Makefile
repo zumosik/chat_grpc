@@ -4,7 +4,7 @@ all: build run
 
 .PHONY: build
 build:
-	go build -o $(APP_NAME) ./cmd/main.go
+	go build -o $(APP_NAME) ./cmd/server/main.go
 
 .PHONY: run
 run: build

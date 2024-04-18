@@ -2,6 +2,7 @@ env: local
 grpc:
   port: 1442
 email:
+  smtp: "smtp.gmail.com"
   port: 572
   from: "..."
   password: "..."
