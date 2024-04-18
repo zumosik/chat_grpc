@@ -5,10 +5,12 @@ import (
 	"auth_service/internal/config"
 	"auth_service/internal/lib/logger/slogpretty"
 	"auth_service/internal/lib/token"
-	"auth_service/internal/service"
+	"auth_service/internal/service/private"
+	"auth_service/internal/service/public"
 	"auth_service/internal/storage/sql/postgres"
 	"context"
 	"fmt"
+	"google.golang.org/grpc/credentials"
 	"log/slog"
 	"net"
 	"os"
@@ -34,6 +36,7 @@ const (
 func main() {
 	cfg := config.MustLoad()
 
+	// open db
 	db, err := sqlx.Open("postgres", cfg.Storage.PostgresURl)
 	if err != nil {
 		panic(fmt.Sprintf("failed to open db (%s): %v", cfg.Storage.PostgresURl, err))
@@ -43,7 +46,7 @@ func main() {
 		panic(fmt.Sprintf("failed to open db (%s): %v", cfg.Storage.PostgresURl, err))
 	}
 
-	// get storage and log
+	// create storage and log
 	storage := postgres.New(db)
 	log := setupLogger(cfg.Env)
 	tokenManager := token.NewManager(cfg.Tokens.TokenSecret, cfg.Tokens.TokenTTL)
@@ -55,7 +58,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	s := service.New(log, storage, storage, tokenManager, notificationManager)
+	// create public auth service
+	s := public.New(log, storage, storage, tokenManager, notificationManager)
+
+	// create private auth service
+	privateS := private.New(log, storage, tokenManager)
 
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
@@ -78,19 +85,51 @@ func main() {
 		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
 	))
 
-	service.Register(gRPCServer, s)
+	// create private server
+	creds, err := credentials.NewServerTLSFromFile(cfg.GRPC.PrivateCRTPath, cfg.GRPC.PrivateKeyPath)
+	if err != nil {
+		log.Error("Failed to generate credentials", slog.String("error", err.Error()))
+	}
+	serverOption := grpc.Creds(creds)
 
+	privateGrpcServer := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(
+			recovery.UnaryServerInterceptor(recoveryOpts...),
+			logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
+		),
+		serverOption,
+	)
+
+	public.Register(gRPCServer, s)
+	private.Register(privateGrpcServer, privateS)
+
+	// Start public gRPC server
 	go func() {
 		l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.Port))
 		if err != nil {
 			log.Error("failed to listen", slog.String("error", err.Error()))
 		}
 
-		log.Info("Starting gRPC server", slog.String("port", fmt.Sprintf(":%d", cfg.GRPC.Port)))
+		log.Info("Starting public gRPC server", slog.String("port", fmt.Sprintf(":%d", cfg.GRPC.Port)))
 
 		if err := gRPCServer.Serve(l); err != nil {
 			log.Error("failed to serve", slog.String("error", err.Error()))
 		}
+	}()
+
+	// Start private gRPC server
+	go func() {
+		l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.PrivatePort))
+		if err != nil {
+			log.Error("failed to listen", slog.String("error", err.Error()))
+		}
+
+		log.Info("Starting private gRPC server", slog.String("port", fmt.Sprintf(":%d", cfg.GRPC.PrivatePort)))
+
+		if err := privateGrpcServer.Serve(l); err != nil {
+			log.Error("failed to serve", slog.String("error", err.Error()))
+		}
+
 	}()
 
 	// Graceful shutdown
@@ -100,7 +139,8 @@ func main() {
 	<-stop
 
 	gRPCServer.GracefulStop()
-	log.Info("Gracefully stopped")
+	privateGrpcServer.GracefulStop()
+	log.Info("Gracefully stopped 2 services")
 }
 
 // InterceptorLogger adapts slog logger to interceptor logger.

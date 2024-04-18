@@ -14,8 +14,8 @@ type Client struct {
 	client notifications.NotificationServiceClient
 }
 
-func Connect(log *slog.Logger, add string) (*Client, error) {
-	conn, err := grpc.Dial(add, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func Connect(log *slog.Logger, addr string) (*Client, error) {
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func Connect(log *slog.Logger, add string) (*Client, error) {
 		l:      log,
 	}
 
-	log.Info("Connected to notifications service", slog.String("address", add))
+	log.Info("Connected to notifications service", slog.String("address", addr))
 
 	return c, nil
 }

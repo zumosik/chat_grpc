@@ -46,6 +46,8 @@ github.com/zumosik/grpc_chat_protos v0.0.0-20240414145910-f4c85f459572 h1:IC+mXT
 github.com/zumosik/grpc_chat_protos v0.0.0-20240414145910-f4c85f459572/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
 github.com/zumosik/grpc_chat_protos v0.0.0-20240417173435-66e0ca13dc28 h1:FkDdX70EV/LdeU8m65dMpJzBGQYj2Hheo9vtSGVld5I=
 github.com/zumosik/grpc_chat_protos v0.0.0-20240417173435-66e0ca13dc28/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
+github.com/zumosik/grpc_chat_protos v0.0.0-20240418165906-902bce65326a h1:Zq+fD9Bc2SGTkqT1qxIi5UYyhrp8rEXQMwmMoJmM1QU=
+github.com/zumosik/grpc_chat_protos v0.0.0-20240418165906-902bce65326a/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
 golang.org/x/crypto v0.22.0 h1:g1v0xeRhjcugydODzvb3mEM9SQ0HGp9s/nh3COQ/C30=
 golang.org/x/crypto v0.22.0/go.mod h1:vr6Su+7cTlO45qkww3VDJlzDn0ctJvRgYbC2NvXHt+M=
 golang.org/x/net v0.24.0 h1:1PcaxkF854Fu3+lvBIx5SYn9wRlBzzcnHZSiaFFAb0w=

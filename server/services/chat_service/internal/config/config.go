@@ -4,35 +4,25 @@ import (
 	"flag"
 	"github.com/ilyakaznacheev/cleanenv"
 	"os"
-	"time"
 )
 
 type Config struct {
 	Env           string        `yaml:"env" env-default:"local"`
 	Storage       StorageConfig `yaml:"storage_cfg" env-required:"true"`
 	GRPC          GRPCConfig    `yaml:"grpc" env-required:"true"`
-	Tokens        Tokens        `yaml:"tokens" env-required:"true"`
 	OtherServices OtherServices `yaml:"other_services" env-required:"true"`
 }
 
 type GRPCConfig struct {
-	Port           int    `yaml:"port" env-required:"true"`
-	PrivatePort    int    `yaml:"private_port" env-required:"true"`
-	PrivateCRTPath string `yaml:"private_crt_path" env-required:"true"`
-	PrivateKeyPath string `yaml:"private_key_path" env-required:"true"`
+	Port int `yaml:"port" env-required:"true"`
 }
 
 type StorageConfig struct {
-	PostgresURl string `yaml:"postgres_url" env-required:"true"`
-}
-
-type Tokens struct {
-	TokenSecret string        `yaml:"token_secret" env-required:"true"`
-	TokenTTL    time.Duration `yaml:"token_ttl" env-default:"1h"`
+	RedisURL string `yaml:"redis_url" env-required:"true"`
 }
 
 type OtherServices struct {
-	NotificationServiceURL string `yaml:"notification_service_url" env-required:"true"`
+	AuthService string `yaml:"auth_service_url" env-required:"true"`
 }
 
 func MustLoad() *Config {
