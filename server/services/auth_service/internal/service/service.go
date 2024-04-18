@@ -2,6 +2,7 @@ package service
 
 import (
 	"auth_service/internal/client/notifications"
+	"auth_service/internal/lib/email_token"
 	"auth_service/internal/models"
 	"context"
 	"fmt"
@@ -18,6 +19,7 @@ import (
 type EmailTokenStorage interface {
 	CreateEmailToken(ctx context.Context, token, userID string) error
 	GetUserIDByToken(ctx context.Context, token string) (string, error)
+	DeleteEmailToken(ctx context.Context, token string) error
 }
 
 type UserStorage interface {
@@ -101,6 +103,8 @@ func (s *Service) Login(ctx context.Context, request *auth.LoginRequest) (*auth.
 }
 
 func (s *Service) CreateUser(ctx context.Context, request *auth.CreateUserRequest) (*auth.CreateUserResponse, error) {
+	const tokenLength = 6
+
 	// 1. Check if username or email already exists
 	u, err := s.st.FindUserByEmail(ctx, request.Email)
 	if err != nil {
@@ -145,11 +149,7 @@ func (s *Service) CreateUser(ctx context.Context, request *auth.CreateUserReques
 	s.l.Debug(fmt.Sprint(s.tokenManager == nil))
 	s.l.Debug(fmt.Sprint(u == nil))
 
-	token, err := s.tokenManager.CreateToken(&user)
-	if err != nil {
-		s.l.Error("Cant create token for email confirm", slog.String("error", err.Error()))
-		return nil, status.Error(codes.Internal, "internal error")
-	}
+	token := email_token.GetRndEmailToken(tokenLength)
 
 	err = s.stEmailToken.CreateEmailToken(ctx, string(token), user.ID)
 	if err != nil {
@@ -297,6 +297,13 @@ func (s *Service) VerifyUser(ctx context.Context, req *auth.VerifyUserRequest) (
 	err = s.st.UpdateUser(ctx, u)
 	if err != nil {
 		s.l.Error("Cant update user", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "internal error")
+	}
+
+	// 4. Delete token
+	err = s.stEmailToken.DeleteEmailToken(ctx, req.VerificationCode)
+	if err != nil {
+		s.l.Error("Cant delete email verification code from db", slog.String("error", err.Error()))
 		return nil, status.Error(codes.Internal, "internal error")
 	}
 

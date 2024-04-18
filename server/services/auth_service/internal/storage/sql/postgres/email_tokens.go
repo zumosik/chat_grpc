@@ -16,3 +16,9 @@ func (s *Storage) GetUserIDByToken(ctx context.Context, token string) (string, e
 	err := s.db.GetContext(ctx, &userID, query, token)
 	return userID, err
 }
+
+func (s *Storage) DeleteEmailToken(ctx context.Context, token string) error {
+	query := `DELETE FROM email_confirm_tokens WHERE token = $1`
+	_, err := s.db.ExecContext(ctx, query, token)
+	return err
+}

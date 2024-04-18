@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/zumosik/grpc_chat_protos/go/notifications"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -42,12 +43,18 @@ func (s *Service) SendNotification(
 		email := confirmEmail.GetEmail()
 		userID := confirmEmail.GetUserId()
 
+		body := fmt.Sprintf(`
+    <h1>Confirmation code</h1>
+    <p>Dear User,</p>
+    <p>Thank you for signing up. Here is your confirmation code: </p>
+    <p><strong>%s</strong></p>
+  `, userID)
+
 		m := gomail.NewMessage()
 		m.SetHeader("From", s.from)
 		m.SetHeader("To", email)
 		m.SetHeader("Subject", "Confirmation Email")
-		m.SetBody("text/html", "Hello, please confirm your email.")
-		m.SetBody("text/html", userID)
+		m.SetBody("text/html", body)
 
 		if err := s.dialer.DialAndSend(m); err != nil {
 			s.l.Error("cant send", slog.String("error", err.Error()))
