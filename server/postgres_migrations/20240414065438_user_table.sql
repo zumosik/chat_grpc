@@ -5,6 +5,7 @@ CREATE TABLE users (
     username VARCHAR(255) NOT NULL UNIQUE,
     email VARCHAR(255) NOT NULL UNIQUE,
     encrypted_password VARCHAR(255) NOT NULL,
+    confirmed_email BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 -- +goose StatementEnd

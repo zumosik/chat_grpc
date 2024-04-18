@@ -11,6 +11,7 @@ type User struct {
 	Username          string    `db:"username"`
 	Password          string    `db:"-"`
 	Email             string    `db:"email"`
+	ConfirmedEmail    bool      `db:"confirmed_email"`
 	EncryptedPassword []byte    `db:"encrypted_password"`
 	CreatedAt         time.Time `db:"created_at"`
 }
@@ -20,6 +21,7 @@ func (u *User) ToAuthUser() *auth.PublicUser {
 	return &auth.PublicUser{
 		Username: u.Username,
 		Email:    u.Email,
+		Verified: u.ConfirmedEmail,
 	}
 }
 

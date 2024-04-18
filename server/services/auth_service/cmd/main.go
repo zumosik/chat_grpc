@@ -1,6 +1,7 @@
 package main
 
 import (
+	"auth_service/internal/client/notifications"
 	"auth_service/internal/config"
 	"auth_service/internal/lib/logger/slogpretty"
 	"auth_service/internal/lib/token"
@@ -42,11 +43,19 @@ func main() {
 		panic(fmt.Sprintf("failed to open db (%s): %v", cfg.Storage.PostgresURl, err))
 	}
 
+	// get storage and log
 	storage := postgres.New(db)
 	log := setupLogger(cfg.Env)
 	tokenManager := token.NewManager(cfg.Tokens.TokenSecret, cfg.Tokens.TokenTTL)
 
-	s := service.New(storage, log, tokenManager)
+	// connect to another services
+	notificationManager, err := notifications.Connect(log, cfg.OtherServices.NotificationServiceURL)
+	if err != nil {
+		log.Error("failed to connect to notifications service", slog.String("error", err.Error()))
+		os.Exit(1)
+	}
+
+	s := service.New(log, storage, storage, tokenManager, notificationManager)
 
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(

@@ -8,10 +8,11 @@ import (
 )
 
 type Config struct {
-	Env     string        `yaml:"env" env-default:"local"`
-	Storage StorageConfig `yaml:"storage_cfg" env-required:"true"`
-	GRPC    GRPCConfig    `yaml:"grpc" env-required:"true"`
-	Tokens  Tokens        `yaml:"tokens" env-required:"true"`
+	Env           string        `yaml:"env" env-default:"local"`
+	Storage       StorageConfig `yaml:"storage_cfg" env-required:"true"`
+	GRPC          GRPCConfig    `yaml:"grpc" env-required:"true"`
+	Tokens        Tokens        `yaml:"tokens" env-required:"true"`
+	OtherServices OtherServices `yaml:"other_services" env-required:"true"`
 }
 
 type GRPCConfig struct {
@@ -25,6 +26,10 @@ type StorageConfig struct {
 type Tokens struct {
 	TokenSecret string        `yaml:"token_secret" env-required:"true"`
 	TokenTTL    time.Duration `yaml:"token_ttl" env-default:"1h"`
+}
+
+type OtherServices struct {
+	NotificationServiceURL string `yaml:"notification_service_url" env-required:"true"`
 }
 
 func MustLoad() *Config {
