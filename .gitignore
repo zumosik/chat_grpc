@@ -25,3 +25,8 @@ dist-ssr
 
 app
 *.exe
+
+# Openssl
+*.pem
+*.cnd
+*.perm

@@ -1,7 +1,9 @@
 env: "local"
 grpc:
   port: 5051
-  timeout: 10s
+  private_port: 5151
+  private_cert_path: "certs/server-auth-cert.pem"
+  private_key_path: "certs/server-auth-key.pem"
 storage_cfg:
   postgres_url: "postgres://postgres:postgres@db:5432/postgres?sslmode=disable" # for docker-compose only
 tokens:

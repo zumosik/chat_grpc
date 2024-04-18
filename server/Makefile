@@ -5,3 +5,10 @@ postgres_up:
 
 postgres_down:
 	goose -dir postgres_migrations postgres $(POSTGRES_MIGARTE_DB) down
+
+gen_ssl:
+	cd cert &&  ./gen.sh; cd .. && \
+ 	mkdir -p ./services/auth_service/configs/cert && \
+	cp cert/server-auth-cert.pem cert/server-auth-key.pem ./services/auth_service/configs/cert && \
+	mkdir -p ./services/chat_service/configs/cert && \
+	cp cert/ca-auth-cert.pem  ./services/chat_service/configs/cert 

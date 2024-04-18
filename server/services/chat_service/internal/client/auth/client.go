@@ -3,10 +3,14 @@ package auth
 import (
 	"chat_service/internal/models"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"github.com/zumosik/grpc_chat_protos/go/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"io"
 	"log/slog"
+	"os"
 )
 
 // Client is a client for PRIVATE auth service
@@ -15,12 +19,32 @@ type Client struct {
 	client auth.PrivateServiceClient
 }
 
-func Connect(log *slog.Logger, addr, crtPath, keyPath string) (*Client, error) {
-	creds, err := credentials.NewClientTLSFromFile(crtPath, keyPath)
+func Connect(log *slog.Logger, addr, certPath string) (*Client, error) {
+
+	//log.Error("failed to load credentials", slog.String("error", err.Error()))
+
+	f, err := os.Open(certPath)
 	if err != nil {
-		log.Error("failed to load credentials", slog.String("error", err.Error()))
+		log.Error("failed to open certificate file", slog.String("error", err.Error()), slog.String("path", certPath))
+		return nil, err
 	}
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(creds))
+	pemServerCA, err := io.ReadAll(f)
+	if err != nil {
+		log.Error("failed to read certificate file", slog.String("error", err.Error()), slog.String("path", certPath))
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemServerCA) {
+		log.Error("failed to append certificate to pool")
+		return nil, err
+	}
+
+	cfg := &tls.Config{
+		RootCAs: certPool,
+	}
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(credentials.NewTLS(cfg)))
 
 	if err != nil {
 		return nil, err

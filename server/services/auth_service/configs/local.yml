@@ -1,7 +1,9 @@
 env: "local"
 grpc:
   port: 44044
-  timeout: 5s
+  private_port: 44045
+  private_cert_path: "certs/server-auth-cert.pem"
+  private_key_path: "certs/server-auth-key.pem"
 storage_cfg:
   postgres_url: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable"
 tokens:

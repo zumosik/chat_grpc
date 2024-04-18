@@ -9,6 +9,7 @@ import (
 	"auth_service/internal/service/public"
 	"auth_service/internal/storage/sql/postgres"
 	"context"
+	"crypto/tls"
 	"fmt"
 	"google.golang.org/grpc/credentials"
 	"log/slog"
@@ -86,18 +87,14 @@ func main() {
 	))
 
 	// create private server
-	creds, err := credentials.NewServerTLSFromFile(cfg.GRPC.PrivateCRTPath, cfg.GRPC.PrivateKeyPath)
-	if err != nil {
-		log.Error("Failed to generate credentials", slog.String("error", err.Error()))
-	}
-	serverOption := grpc.Creds(creds)
+	creds := mustLoadTLSCreds(cfg.GRPC.PrivateCERTPath, cfg.GRPC.PrivateKeyPath)
 
 	privateGrpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
 			recovery.UnaryServerInterceptor(recoveryOpts...),
 			logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
 		),
-		serverOption,
+		grpc.Creds(creds),
 	)
 
 	public.Register(gRPCServer, s)
@@ -180,4 +177,18 @@ func setupPrettySlog() *slog.Logger {
 	handler := opts.NewPrettyHandler(os.Stdout)
 
 	return slog.New(handler)
+}
+
+func mustLoadTLSCreds(crt, key string) credentials.TransportCredentials {
+	creds, err := tls.LoadX509KeyPair(crt, key)
+	if err != nil {
+		panic(fmt.Sprintf("failed to load TLS keys: %v", err))
+	}
+
+	c := &tls.Config{
+		Certificates: []tls.Certificate{creds},
+		ClientAuth:   tls.NoClientCert,
+	}
+
+	return credentials.NewTLS(c)
 }

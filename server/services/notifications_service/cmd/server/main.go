@@ -19,6 +19,7 @@ import (
 	"gopkg.in/gomail.v2"
 )
 
+// TODO: add credentials
 func main() {
 	cfg := config.MustLoad()
 
