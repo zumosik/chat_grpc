@@ -23,6 +23,14 @@ type StorageConfig struct {
 
 type OtherServices struct {
 	AuthService string `yaml:"auth_service_url" env-required:"true"`
+
+	Cert CertsConfig `yaml:"certs" env-required:"true"`
+}
+
+type CertsConfig struct {
+	CaPath   string `yaml:"ca_path" env-required:"true"`
+	CertPath string `yaml:"cert_path" env-required:"true"`
+	KeyPath  string `yaml:"key_path" env-required:"true"`
 }
 
 func MustLoad() *Config {

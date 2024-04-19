@@ -1,0 +1,11 @@
+env: local
+storage_cfg:
+  redis_url: redis://localhost:6379
+grpc:
+  port: 44033
+other_services:
+  auth_service_url: localhost:44045
+  certs:
+    ca_path: ./configs/cert/ca-auth-cert.pem
+    cert_path: ./configs/cert/client-auth-cert.pem
+    key_path: ./configs/cert/client-auth-key.pem

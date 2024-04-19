@@ -1,1 +1,1 @@
-subjectAltName=DNS:*.zumosik.tech,DNS:*.zumosik.tech,IP:0.0.0.0
+subjectAltName=DNS:*.zumosik.tech,DNS:localhost,IP:0.0.0.0

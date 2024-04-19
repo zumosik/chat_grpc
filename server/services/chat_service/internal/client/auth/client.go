@@ -8,7 +8,6 @@ import (
 	"github.com/zumosik/grpc_chat_protos/go/auth"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"io"
 	"log/slog"
 	"os"
 )
@@ -19,29 +18,32 @@ type Client struct {
 	client auth.PrivateServiceClient
 }
 
-func Connect(log *slog.Logger, addr, certPath string) (*Client, error) {
+func Connect(log *slog.Logger, addr, caPath, certPath, keyPath string) (*Client, error) {
 
 	//log.Error("failed to load credentials", slog.String("error", err.Error()))
 
-	f, err := os.Open(certPath)
+	// Load CA cert
+	pemServerCA, err := os.ReadFile(caPath)
 	if err != nil {
-		log.Error("failed to open certificate file", slog.String("error", err.Error()), slog.String("path", certPath))
-		return nil, err
-	}
-	pemServerCA, err := io.ReadAll(f)
-	if err != nil {
-		log.Error("failed to read certificate file", slog.String("error", err.Error()), slog.String("path", certPath))
+		log.Error("failed to load CA cert", slog.String("error", err.Error()))
 		return nil, err
 	}
 
 	certPool := x509.NewCertPool()
 	if !certPool.AppendCertsFromPEM(pemServerCA) {
-		log.Error("failed to append certificate to pool")
+		log.Error("failed to append CA cert")
+		return nil, err
+	}
+
+	clientCert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	if err != nil {
+		log.Error("failed to load client cert", slog.String("error", err.Error()))
 		return nil, err
 	}
 
 	cfg := &tls.Config{
-		RootCAs: certPool,
+		Certificates: []tls.Certificate{clientCert},
+		RootCAs:      certPool,
 	}
 
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(credentials.NewTLS(cfg)))

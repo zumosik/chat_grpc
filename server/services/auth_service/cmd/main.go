@@ -10,6 +10,7 @@ import (
 	"auth_service/internal/storage/sql/postgres"
 	"context"
 	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"google.golang.org/grpc/credentials"
 	"log/slog"
@@ -87,7 +88,7 @@ func main() {
 	))
 
 	// create private server
-	creds := mustLoadTLSCreds(cfg.GRPC.PrivateCERTPath, cfg.GRPC.PrivateKeyPath)
+	creds := mustLoadTLSCreds(cfg.GRPC.Certs.CaPath, cfg.GRPC.Certs.CertPath, cfg.GRPC.Certs.KeyPath)
 
 	privateGrpcServer := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(
@@ -179,7 +180,17 @@ func setupPrettySlog() *slog.Logger {
 	return slog.New(handler)
 }
 
-func mustLoadTLSCreds(crt, key string) credentials.TransportCredentials {
+func mustLoadTLSCreds(ca, crt, key string) credentials.TransportCredentials {
+	pemClientCA, err := os.ReadFile(ca)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read certificate file: %v", err))
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemClientCA) {
+		panic("failed to append certificate to pool")
+	}
+
 	creds, err := tls.LoadX509KeyPair(crt, key)
 	if err != nil {
 		panic(fmt.Sprintf("failed to load TLS keys: %v", err))
@@ -187,7 +198,8 @@ func mustLoadTLSCreds(crt, key string) credentials.TransportCredentials {
 
 	c := &tls.Config{
 		Certificates: []tls.Certificate{creds},
-		ClientAuth:   tls.NoClientCert,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
 	}
 
 	return credentials.NewTLS(c)

@@ -16,10 +16,15 @@ type Config struct {
 }
 
 type GRPCConfig struct {
-	Port            int    `yaml:"port" env-required:"true"`
-	PrivatePort     int    `yaml:"private_port" env-required:"true"`
-	PrivateCERTPath string `yaml:"private_cert_path" env-required:"true"`
-	PrivateKeyPath  string `yaml:"private_key_path" env-required:"true"`
+	Port        int         `yaml:"port" env-required:"true"`
+	PrivatePort int         `yaml:"private_port" env-required:"true"`
+	Certs       CertsConfig `yaml:"certs" env-required:"true"`
+}
+
+type CertsConfig struct {
+	CaPath   string `yaml:"ca_path" env-required:"true"`
+	CertPath string `yaml:"cert_path" env-required:"true"`
+	KeyPath  string `yaml:"key_path" env-required:"true"`
 }
 
 type StorageConfig struct {

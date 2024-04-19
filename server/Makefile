@@ -9,6 +9,6 @@ postgres_down:
 gen_ssl:
 	cd cert &&  ./gen.sh; cd .. && \
  	mkdir -p ./services/auth_service/configs/cert && \
-	cp cert/server-auth-cert.pem cert/server-auth-key.pem ./services/auth_service/configs/cert && \
+	cp cert/server-auth-cert.pem cert/server-auth-key.pem cert/ca-auth-cert.pem ./services/auth_service/configs/cert && \
 	mkdir -p ./services/chat_service/configs/cert && \
-	cp cert/ca-auth-cert.pem  ./services/chat_service/configs/cert 
+	cp cert/ca-auth-cert.pem cert/client-auth-cert.pem cert/client-auth-key.pem ./services/chat_service/configs/cert
