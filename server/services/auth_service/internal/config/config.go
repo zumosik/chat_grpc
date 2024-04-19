@@ -38,6 +38,8 @@ type Tokens struct {
 
 type OtherServices struct {
 	NotificationServiceURL string `yaml:"notification_service_url" env-required:"true"`
+
+	NotificationsCert CertsConfig `yaml:"notifications_cert" env-required:"true"`
 }
 
 func MustLoad() *Config {

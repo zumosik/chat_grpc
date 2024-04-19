@@ -13,9 +13,7 @@ func main() {
 
 	cl, err := auth.Connect(slog.Default(),
 		cfg.OtherServices.AuthService,
-		cfg.OtherServices.Cert.CaPath,
-		cfg.OtherServices.Cert.CertPath,
-		cfg.OtherServices.Cert.KeyPath,
+		&cfg.OtherServices.Cert,
 	)
 	if err != nil {
 		panic(err)

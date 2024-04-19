@@ -14,7 +14,14 @@ type Config struct {
 }
 
 type GRPCConfig struct {
-	Port int `yaml:"port" env-required:"true"`
+	Port  int         `yaml:"port" env-required:"true"`
+	Certs CertsConfig `yaml:"certs" env-required:"true"`
+}
+
+type CertsConfig struct {
+	CaPath   string `yaml:"ca_path" env-required:"true"`
+	CertPath string `yaml:"cert_path" env-required:"true"`
+	KeyPath  string `yaml:"key_path" env-required:"true"`
 }
 
 type EmailConfig struct {

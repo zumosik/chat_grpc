@@ -2,7 +2,10 @@ package main
 
 import (
 	"context"
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
+	"google.golang.org/grpc/credentials"
 	"log/slog"
 	"net"
 	"notifications_service/internal/config"
@@ -44,10 +47,14 @@ func main() {
 		}),
 	}
 
+	creds := mustLoadTLSCreds(cfg.GRPC.Certs.CaPath, cfg.GRPC.Certs.CertPath, cfg.GRPC.Certs.KeyPath)
+
 	gRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
-	))
+	),
+		grpc.Creds(creds),
+	)
 
 	service.Register(gRPCServer, s)
 
@@ -80,4 +87,29 @@ func InterceptorLogger(l *slog.Logger) logging.Logger {
 	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
 		l.Log(ctx, slog.Level(lvl), msg, fields...)
 	})
+}
+
+func mustLoadTLSCreds(ca, crt, key string) credentials.TransportCredentials {
+	pemClientCA, err := os.ReadFile(ca)
+	if err != nil {
+		panic(fmt.Sprintf("failed to read certificate file: %v", err))
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemClientCA) {
+		panic("failed to append certificate to pool")
+	}
+
+	creds, err := tls.LoadX509KeyPair(crt, key)
+	if err != nil {
+		panic(fmt.Sprintf("failed to load TLS keys: %v", err))
+	}
+
+	c := &tls.Config{
+		Certificates: []tls.Certificate{creds},
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+		ClientCAs:    certPool,
+	}
+
+	return credentials.NewTLS(c)
 }

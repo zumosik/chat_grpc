@@ -1,12 +1,16 @@
 package notifications
 
 import (
+	"auth_service/internal/config"
 	"context"
+	"crypto/tls"
+	"crypto/x509"
+	"google.golang.org/grpc/credentials"
 	"log/slog"
+	"os"
 
 	"github.com/zumosik/grpc_chat_protos/go/notifications"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 )
 
 type Client struct {
@@ -14,8 +18,32 @@ type Client struct {
 	client notifications.NotificationServiceClient
 }
 
-func Connect(log *slog.Logger, addr string) (*Client, error) {
-	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Client, error) {
+
+	pemServerCA, err := os.ReadFile(certCfg.CaPath)
+	if err != nil {
+		log.Error("failed to load CA cert", slog.String("error", err.Error()))
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	if !certPool.AppendCertsFromPEM(pemServerCA) {
+		log.Error("failed to append CA cert")
+		return nil, err
+	}
+
+	clientCert, err := tls.LoadX509KeyPair(certCfg.CertPath, certCfg.KeyPath)
+	if err != nil {
+		log.Error("failed to load client cert", slog.String("error", err.Error()))
+		return nil, err
+	}
+
+	cfg := &tls.Config{
+		Certificates: []tls.Certificate{clientCert},
+		RootCAs:      certPool,
+	}
+
+	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(credentials.NewTLS(cfg)))
 
 	if err != nil {
 		return nil, err

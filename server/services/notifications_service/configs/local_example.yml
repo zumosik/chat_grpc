@@ -1,6 +1,10 @@
 env: local
 grpc:
   port: 5052
+  certs:
+    ca_path: ./configs/cert/ca-notifications-cert.pem
+    cert_path: ./configs/cert/server-notifications-cert.pem
+    key_path: ./configs/cert/server-notifications-key.pem
 email:
   smtp: "smtp.gmail.com"
   port: 587

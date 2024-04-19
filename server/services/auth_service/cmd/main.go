@@ -54,7 +54,7 @@ func main() {
 	tokenManager := token.NewManager(cfg.Tokens.TokenSecret, cfg.Tokens.TokenTTL)
 
 	// connect to another services
-	notificationManager, err := notifications.Connect(log, cfg.OtherServices.NotificationServiceURL)
+	notificationManager, err := notifications.Connect(log, cfg.OtherServices.NotificationServiceURL, &cfg.OtherServices.NotificationsCert)
 	if err != nil {
 		log.Error("failed to connect to notifications service", slog.String("error", err.Error()))
 		os.Exit(1)

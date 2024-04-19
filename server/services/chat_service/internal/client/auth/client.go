@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"chat_service/internal/config"
 	"chat_service/internal/models"
 	"context"
 	"crypto/tls"
@@ -18,12 +19,12 @@ type Client struct {
 	client auth.PrivateServiceClient
 }
 
-func Connect(log *slog.Logger, addr, caPath, certPath, keyPath string) (*Client, error) {
+func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Client, error) {
 
 	//log.Error("failed to load credentials", slog.String("error", err.Error()))
 
 	// Load CA cert
-	pemServerCA, err := os.ReadFile(caPath)
+	pemServerCA, err := os.ReadFile(certCfg.CaPath)
 	if err != nil {
 		log.Error("failed to load CA cert", slog.String("error", err.Error()))
 		return nil, err
@@ -35,7 +36,7 @@ func Connect(log *slog.Logger, addr, caPath, certPath, keyPath string) (*Client,
 		return nil, err
 	}
 
-	clientCert, err := tls.LoadX509KeyPair(certPath, keyPath)
+	clientCert, err := tls.LoadX509KeyPair(certCfg.CertPath, certCfg.KeyPath)
 	if err != nil {
 		log.Error("failed to load client cert", slog.String("error", err.Error()))
 		return nil, err

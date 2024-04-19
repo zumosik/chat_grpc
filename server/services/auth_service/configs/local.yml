@@ -12,3 +12,7 @@ tokens:
   token_secret: "some_random_str"
 other_services:
   notification_service_url: "notifications_service:5052"
+  notifications_cert:
+    ca_path: ./configs/cert/ca-notifications-cert.pem
+    cert_path: ./configs/cert/client-notifications-cert.pem
+    key_path: ./configs/cert/client-notifications-key.pem
