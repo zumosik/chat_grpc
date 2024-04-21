@@ -11,6 +11,8 @@ import (
 	"rooms_service/internal/models"
 )
 
+// TODO: RemoveFromRoom
+
 type RoomStorage interface {
 	CreateRoom(ctx context.Context, room *models.Room) (*models.Room, error)
 	GetRoom(ctx context.Context, id string) (*models.Room, error)
@@ -94,6 +96,8 @@ func (s *Service) UpdateRoom(ctx context.Context, req *rooms.UpdateRoomRequest) 
 		return nil, status.Error(codes.PermissionDenied, "User is not the creator of the room")
 	}
 
+	// add fields here to update
+	// users cant be updated here, use AddToRoom and RemoveFromRoom
 	room.Name = req.Name
 
 	roomResp, err := s.storage.UpdateRoom(ctx, room)
@@ -149,6 +153,41 @@ func (s *Service) AddToRoom(ctx context.Context, req *rooms.AddToRoomRequest) (*
 	}
 
 	room.Users = append(room.Users, u)
+
+	roomResp, err := s.storage.UpdateRoom(ctx, room)
+	if err != nil {
+		s.l.Error("Cant update room", slog.String("error", err.Error()))
+		return nil, status.Error(codes.Internal, "Cant update room")
+	}
+
+	return &rooms.AddToRoomResponse{Room: roomResp.ToProto()}, nil
+}
+
+func (s *Service) DeleteFromRoom(ctx context.Context, req *rooms.AddToRoomRequest) (*rooms.AddToRoomResponse, error) {
+	u, ok := ctx.Value(interceptor.UserContextKey).(*models.User)
+	if !ok {
+		s.l.Error("Cant get user from context")
+		return nil, status.Error(codes.Internal, "Cant authenticate user")
+	}
+
+	room, err := s.storage.GetRoom(ctx, req.RoomId)
+	if err != nil {
+		s.l.Error("Cant get room", slog.String("error", err.Error()))
+		return nil, status.Error(codes.NotFound, "Room not found")
+	}
+
+	if !room.HasUser(u) {
+		return nil, status.Error(codes.NotFound, "User is not in the room")
+	}
+
+	newUsers := make([]*models.User, 0, len(room.Users)-1)
+	for _, user := range room.Users {
+		if user.ID != u.ID {
+			newUsers = append(newUsers, user)
+		}
+	}
+
+	room.Users = newUsers
 
 	roomResp, err := s.storage.UpdateRoom(ctx, room)
 	if err != nil {
