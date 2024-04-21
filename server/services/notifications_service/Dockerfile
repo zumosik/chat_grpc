@@ -16,10 +16,11 @@ FROM alpine as runner
 
 COPY --from=builder /usr/local/src/bin/app /app
 
-ARG config_path_from=configs/prod.yaml
+ARG config_path_from=configs/prod.yml
+ARG cert_path=./configs/cert/
 ENV CONFIG_PATH=config.yaml
 
-
 COPY $config_path_from $CONFIG_PATH
+COPY $cert_path ./cert/
 
 CMD ["/app"]

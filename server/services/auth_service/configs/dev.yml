@@ -1,0 +1,19 @@
+env: "dev"
+grpc:
+  port: 5051
+  private_port: 5151
+  certs:
+    ca_path: ./cert/ca-auth-cert.pem
+    cert_path: ./cert/server-auth-cert.pem
+    key_path: ./cert/server-auth-key.pem
+storage_cfg:
+  postgres_url: "postgres://postgres:postgres@db:5432/postgres?sslmode=disable" # for docker-compose only
+tokens:
+  token_secret: "vBDndXq0555gsKpLrRQTJrDgYadmfYew"
+  token_ttl: 24h
+other_services:
+  notification_service_url: "notifications_service:5052"
+  notifications_cert:
+    ca_path: ./cert/ca-notifications-cert.pem
+    cert_path: ./cert/client-notifications-cert.pem
+    key_path: ./cert/client-notifications-key.pem

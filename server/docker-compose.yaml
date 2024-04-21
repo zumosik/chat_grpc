@@ -1,5 +1,12 @@
 version: '3.8'
 services:
+  envoy:
+    image: envoyproxy/envoy-dev:e4955aed5694f9935d674419dbb364e744f697b4
+    volumes:
+      - ./envoy.yaml:/etc/envoy/envoy.yaml
+    ports:
+      - "9901:9901"
+      - "7771:7771"
   db:
     image: postgres:latest
     restart: always
@@ -11,22 +18,16 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-  envoy:
-    image: envoyproxy/envoy-dev:e4955aed5694f9935d674419dbb364e744f697b4
-    volumes:
-      - ./envoy.yaml:/etc/envoy/envoy.yaml
-    ports:
-      - "9901:9901"
-      - "7771:7771"
-
   notifications_service:
+    depends_on:
+      - envoy # does not need to wait for envoy, but it's a good practice to keep the order and i can see logs of this service
     build:
       context: ./services/notifications_service
       dockerfile: Dockerfile
       args:
-        config_path_from: configs/prod.yml
+        config_path_from: configs/dev.yml
     ports:
-      - 5052:5052
+      - "5052:5052"
   auth_service:
     depends_on:
       - db # wait for db to be "ready" before starting
@@ -36,9 +37,22 @@ services:
       context: ./services/auth_service
       dockerfile: Dockerfile
       args:
-        config_path_from: configs/prod.yml
+        config_path_from: configs/dev.yml
     ports: 
-      - 5051:5051
+      - "5051:5051"
+      - "5151:5151"
+  rooms_service:
+    depends_on:
+      - db # wait for db to be "ready" before starting
+      - envoy # wait for envoy to be "ready" before starting
+      - auth_service # wait for notifications_service to be "ready" before starting
+    build:
+      context: ./services/rooms_service
+      dockerfile: Dockerfile
+      args:
+        config_path_from: configs/dev.yml
+    ports:
+      - "5053:5053"
 
 volumes:
   postgres_data:
