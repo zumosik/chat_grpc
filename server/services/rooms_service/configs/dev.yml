@@ -3,6 +3,7 @@ storage_cfg:
   postgres_url: "postgres://postgres:postgres@db:5432/postgres?sslmode=disable"
 grpc:
   port: 5053
+  private_port: 5153
   certs:
     ca_path: ./cert/ca-rooms-cert.pem
     cert_path: ./cert/server-rooms-cert.pem

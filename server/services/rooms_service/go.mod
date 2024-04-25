@@ -9,7 +9,7 @@ require (
 	github.com/ilyakaznacheev/cleanenv v1.5.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/lib/pq v1.2.0
-	github.com/zumosik/grpc_chat_protos v0.0.0-20240421135904-3b9c29e1e423
+	github.com/zumosik/grpc_chat_protos v0.0.0-20240425145249-de86971c24d5
 	google.golang.org/grpc v1.63.0
 )
 

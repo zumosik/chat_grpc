@@ -60,6 +60,7 @@ func main() {
 
 	// create grpc server
 	serv := service.New(log, storage)
+	privateServ := service.NewPrivate(log, storage)
 
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
@@ -83,11 +84,18 @@ func main() {
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
 		interceptor.TokenMiddleware(authClient),
+	))
+
+	privateGRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
+		recovery.UnaryServerInterceptor(recoveryOpts...),
+		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
+		interceptor.TokenMiddleware(authClient),
 	), grpc.Creds(creds))
 
 	service.Register(gRPCServer, serv)
+	service.RegisterPrivate(privateGRPCServer, privateServ)
 
-	// Start private gRPC server
+	// Start gRPC server
 	go func() {
 		l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.Port))
 		if err != nil {
@@ -102,6 +110,21 @@ func main() {
 
 	}()
 
+	// Start PRIVATE gRPC server
+	go func() {
+		l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.PrivatePort))
+		if err != nil {
+			log.Error("failed to listen", slog.String("error", err.Error()))
+		}
+
+		log.Info("Starting PRIVATE gRPC server", slog.String("port", fmt.Sprintf(":%d", cfg.GRPC.PrivatePort)))
+
+		if err := gRPCServer.Serve(l); err != nil {
+			log.Error("failed to serve", slog.String("error", err.Error()))
+		}
+
+	}()
+
 	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
@@ -109,7 +132,8 @@ func main() {
 	<-stop
 
 	gRPCServer.GracefulStop()
-	log.Info("Gracefully stopped service")
+	privateGRPCServer.GracefulStop()
+	log.Info("Gracefully stopped 2 services")
 }
 
 // InterceptorLogger adapts slog logger to interceptor logger.

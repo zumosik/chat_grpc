@@ -37,6 +37,8 @@ github.com/zumosik/grpc_chat_protos v0.0.0-20240421092513-a4378ba8fd48 h1:OIb60x
 github.com/zumosik/grpc_chat_protos v0.0.0-20240421092513-a4378ba8fd48/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
 github.com/zumosik/grpc_chat_protos v0.0.0-20240421135904-3b9c29e1e423 h1:VmNEqYt9gaQBXv+8S6fLoaZqnhBbjkI28aRbPqWDfMM=
 github.com/zumosik/grpc_chat_protos v0.0.0-20240421135904-3b9c29e1e423/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
+github.com/zumosik/grpc_chat_protos v0.0.0-20240425145249-de86971c24d5 h1:fgMt09CYmgT/l8Zs6DXXf4++41MkUe/333wGe+UHfZU=
+github.com/zumosik/grpc_chat_protos v0.0.0-20240425145249-de86971c24d5/go.mod h1:GlaAGI2Eus0PWYZLhdBRTUnRNltv4DptKfO3dJ5nvmU=
 golang.org/x/net v0.21.0 h1:AQyQV4dYCvJ7vGmJyKki9+PBdyvhkSd8EIx/qb0AYv4=
 golang.org/x/net v0.21.0/go.mod h1:bIjVDfnllIU7BJ2DNgfnXvpSvtn8VRwhlsaeUTyUS44=
 golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab/go.mod h1:oPkhp1MJrh7nUepCBck5+mAzfO9JrbApNNgaTdGDITg=

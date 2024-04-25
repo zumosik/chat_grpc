@@ -3,6 +3,7 @@ storage_cfg:
   postgres_url: "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable" # FIXME
 grpc:
   port: 44034
+  private_port: 44035
   certs:
     ca_path: ./configs/cert/ca-rooms-cert.pem
     cert_path: ./configs/cert/server-rooms-cert.pem
