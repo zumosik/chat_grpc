@@ -6,3 +6,4 @@
 - [ ] Configure docker-compose and envoy for chat service also
 - [x] Rooms service
 - [ ] Test services
+- [ ] Private rooms service

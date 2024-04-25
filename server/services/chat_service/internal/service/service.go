@@ -17,6 +17,14 @@ const (
 	TokenMetadataKey = "token"
 )
 
+type RoomsService interface {
+	GetUserRooms(ctx context.Context, userID string) ([]*models.Room, error)
+}
+
+type AuthService interface {
+	AuthenticateUser(ctx context.Context, token []byte) (*models.User, error)
+}
+
 type MessageStorage interface {
 	CreateMessage(ctx context.Context, msg *models.Msg) (*models.Msg, error)
 	GetMsgByID(ctx context.Context, id string) (*models.Msg, error)
@@ -26,19 +34,43 @@ type MessageStorage interface {
 type Service struct {
 	l *slog.Logger
 
-	authService *auth.Client
-	storage     MessageStorage
+	authService  AuthService
+	roomsService RoomsService
 
-	activeUsers []*models.User
+	storage MessageStorage
+
+	userServers map[string]chat.ChatService_StreamServer
+	activeUsers map[string][]string
+
+	messagesToSend chan *models.Msg
 
 	chat.UnimplementedChatServiceServer
 }
 
 func New(logger *slog.Logger, authService *auth.Client, storage MessageStorage) *Service {
 	return &Service{
-		l:           logger,
-		authService: authService,
-		storage:     storage,
+		l:              logger,
+		authService:    authService,
+		storage:        storage,
+		userServers:    make(map[string]chat.ChatService_StreamServer),
+		activeUsers:    make(map[string][]string),
+		messagesToSend: make(chan *models.Msg, 100),
+	}
+}
+
+func (s *Service) SendMessagesLoop() {
+	for msg := range s.messagesToSend {
+		for _, userID := range s.activeUsers[msg.ChatID] {
+			server := s.userServers[userID]
+			err := server.Send(&chat.StreamResponse{
+				Event: &chat.StreamResponse_ClientMessage{
+					ClientMessage: msg.ToProto(),
+				},
+			})
+			if err != nil {
+				s.l.Error("Failed to send message to user", slog.String("error", err.Error()))
+			}
+		}
 	}
 }
 
@@ -51,11 +83,24 @@ func (s *Service) Stream(server chat.ChatService_StreamServer) error {
 		return err
 	}
 
-	// 1.1 get user rooms (call to room service)
-	// TODO
-
 	// 2. save user as active user
-	s.activeUsers = append(s.activeUsers, user)
+	s.userServers[user.ID] = server
+
+	// 3. get user rooms
+	rooms, err := s.roomsService.GetUserRooms(ctx, user.ID)
+	if err != nil {
+		s.l.Error("Failed to get user rooms", slog.String("error", err.Error()))
+		return status.Error(codes.Internal, "internal error")
+	}
+
+	// 4. save user as active user in each room
+	for _, room := range rooms {
+		s.activeUsers[room.ID] = append(s.activeUsers[room.ID], user.ID)
+	}
+
+	defer func() {
+		delete(s.userServers, user.ID)
+	}()
 
 	for {
 		select {
@@ -99,6 +144,7 @@ func (s *Service) Stream(server chat.ChatService_StreamServer) error {
 			// 3.1 store payload in db (if needed)
 			// TODO
 			// 4. send message to all subscribers
+			s.messagesToSend <- msg
 		}
 	}
 }
