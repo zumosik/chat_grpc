@@ -6,8 +6,9 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/google/uuid v1.6.0
+	github.com/grpc-ecosystem/go-grpc-middleware/v2 v2.1.0
 	github.com/ilyakaznacheev/cleanenv v1.5.0
-	github.com/zumosik/grpc_chat_protos v0.0.0-20240425145249-de86971c24d5
+	github.com/zumosik/grpc_chat_protos v0.0.0-20240427143429-11ee10352536
 	google.golang.org/grpc v1.63.0
 )
 

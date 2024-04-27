@@ -14,17 +14,22 @@ type Config struct {
 }
 
 type GRPCConfig struct {
-	Port int `yaml:"port" env-required:"true"`
+	Port  int         `yaml:"port" env-required:"true"`
+	Certs CertsConfig `yaml:"certs" env-required:"true"`
 }
 
 type StorageConfig struct {
 	RedisURL string `yaml:"redis_url" env-required:"true"`
+	Password string `yaml:"password" env-required:"true"`
+	Db       int    `yaml:"db" env-default:"0"`
 }
 
 type OtherServices struct {
-	AuthService string `yaml:"auth_service_url" env-required:"true"`
+	AuthService  string `yaml:"auth_service_url" env-required:"true"`
+	RoomsService string `yaml:"rooms_service_url" env-required:"true"`
 
-	Cert CertsConfig `yaml:"certs" env-required:"true"`
+	AuthCerts  CertsConfig `yaml:"auth_certs" env-required:"true"`
+	RoomsCerts CertsConfig `yaml:"rooms_certs" env-required:"true"`
 }
 
 type CertsConfig struct {

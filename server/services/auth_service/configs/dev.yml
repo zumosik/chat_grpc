@@ -1,7 +1,6 @@
 env: "dev"
 grpc:
   port: 5051
-  private_port: 5151
   certs:
     ca_path: ./cert/ca-auth-cert.pem
     cert_path: ./cert/server-auth-cert.pem

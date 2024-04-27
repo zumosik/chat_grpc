@@ -15,7 +15,7 @@ import (
 
 type PrivateClient struct {
 	l      *slog.Logger
-	client rooms.PrivateRoomsServiceClient
+	client rooms.RoomServiceClient
 }
 
 func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*PrivateClient, error) {
@@ -47,7 +47,7 @@ func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Priva
 		return nil, err
 	}
 
-	client := rooms.NewPrivateRoomsServiceClient(conn)
+	client := rooms.NewRoomServiceClient(conn)
 
 	c := &PrivateClient{
 		client: client,
@@ -60,7 +60,7 @@ func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Priva
 }
 
 func (c *PrivateClient) GetUserRooms(ctx context.Context, userID string) ([]*models.Room, error) {
-	resp, err := c.client.GetRoomsByUserID(ctx, &rooms.PrivateGetRoomsByUserIDRequest{
+	resp, err := c.client.GetRoomsByUserID(ctx, &rooms.GetRoomsByUserIDRequest{
 		UserId: userID,
 	})
 	if err != nil {

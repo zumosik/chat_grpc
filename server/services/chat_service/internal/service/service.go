@@ -1,11 +1,11 @@
 package service
 
 import (
-	"chat_service/internal/client/auth"
 	"chat_service/internal/models"
 	"context"
 	"errors"
 	"github.com/zumosik/grpc_chat_protos/go/chat"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
@@ -47,15 +47,20 @@ type Service struct {
 	chat.UnimplementedChatServiceServer
 }
 
-func New(logger *slog.Logger, authService *auth.Client, storage MessageStorage) *Service {
+func New(logger *slog.Logger, authService AuthService, roomsService RoomsService, storage MessageStorage) *Service {
 	return &Service{
 		l:              logger,
 		authService:    authService,
+		roomsService:   roomsService,
 		storage:        storage,
 		userServers:    make(map[string]chat.ChatService_StreamServer),
 		activeUsers:    make(map[string][]string),
 		messagesToSend: make(chan *models.Msg, 100),
 	}
+}
+
+func Register(server *grpc.Server, service *Service) {
+	chat.RegisterChatServiceServer(server, service)
 }
 
 func (s *Service) SendMessagesLoop() {

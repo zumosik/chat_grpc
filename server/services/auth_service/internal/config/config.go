@@ -16,9 +16,8 @@ type Config struct {
 }
 
 type GRPCConfig struct {
-	Port        int         `yaml:"port" env-required:"true"`
-	PrivatePort int         `yaml:"private_port" env-required:"true"`
-	Certs       CertsConfig `yaml:"certs" env-required:"true"`
+	Port  int         `yaml:"port" env-required:"true"`
+	Certs CertsConfig `yaml:"certs" env-required:"true"`
 }
 
 type CertsConfig struct {
