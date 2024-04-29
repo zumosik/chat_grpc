@@ -1,0 +1,33 @@
+package components
+
+type InputParams struct {
+	Name        string
+	Placeholder string
+	InputType   string
+	Required    bool
+	LabelText   string
+}
+
+templ Input(params *InputParams) {
+	<div>
+		<label
+			for={ params.Name }
+			class="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
+		>
+			{ params.LabelText }
+		</label>
+		<input
+			type={ params.InputType }
+			name={ params.Name }
+			id={ params.Name }
+			placeholder={ params.Placeholder }
+			if params.Required {
+				required
+			}
+			class="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg
+                focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700
+                dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500
+                dark:focus:border-blue-500"
+		/>
+	</div>
+}

@@ -1,0 +1,28 @@
+package layouts
+
+// Base is the base layout for all pages with tailwind and htmx included
+templ Base(title string, dark bool) {
+	<!DOCTYPE html>
+	<html lang="en">
+		<head>
+			<title>{title}</title>
+			<link rel="icon" type="image/x-icon" href="/public/favicon.ico"/>
+			<meta charset="UTF-8"/>
+			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+             <link rel="stylesheet" href="/public/styles.css"/>
+             <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+            <script src="https://unpkg.com/htmx.org@1.9.12/dist/ext/response-targets.js"></script>
+		</head>
+		<body 
+			if dark {
+				class="antialiased dark"
+			} else {
+				class="antialiased"
+			}
+		>
+			// @components.Navigation() - some nav later
+			{ children... }
+		</body>
+	</html>
+}

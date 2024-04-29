@@ -1,0 +1,11 @@
+# Other files
+.idea/
+
+# Bins
+bin/
+tmp/
+tailwindcss
+
+# Generated files
+public/styles.css
+*_templ.go
