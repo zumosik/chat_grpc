@@ -1,11 +1,22 @@
 env: local
 storage_cfg:
   redis_url: redis://localhost:6379
+  password: ""
+  db: 0
 grpc:
   port: 44033
+  certs:
+    ca_path: ./configs/cert/ca-chat-cert.pem
+    cert_path: ./configs/cert/server-chat-cert.pem
+    key_path: ./configs/cert/server-chat-key.pem
 other_services:
   auth_service_url: localhost:44045
-  certs:
+  auth_certs:
     ca_path: ./configs/cert/ca-auth-cert.pem
     cert_path: ./configs/cert/client-auth-cert.pem
     key_path: ./configs/cert/client-auth-key.pem
+  rooms_service_url: localhost:44034
+  rooms_certs:
+    ca_path: ./configs/cert/ca-rooms-cert.pem
+    cert_path: ./configs/cert/client-rooms-cert.pem
+    key_path: ./configs/cert/client-rooms-key.pem

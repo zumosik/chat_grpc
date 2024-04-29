@@ -5,8 +5,7 @@ import (
 	"auth_service/internal/config"
 	"auth_service/internal/lib/logger/slogpretty"
 	"auth_service/internal/lib/token"
-	"auth_service/internal/service/private"
-	"auth_service/internal/service/public"
+	"auth_service/internal/service"
 	"auth_service/internal/storage/sql/postgres"
 	"context"
 	"crypto/tls"
@@ -61,10 +60,7 @@ func main() {
 	}
 
 	// create public auth service
-	s := public.New(log, storage, storage, tokenManager, notificationManager)
-
-	// create private auth service
-	privateS := private.New(log, storage, tokenManager)
+	s := service.New(log, storage, storage, tokenManager, notificationManager)
 
 	loggingOpts := []logging.Option{
 		logging.WithLogOnEvents(
@@ -82,26 +78,16 @@ func main() {
 		}),
 	}
 
+	creds := mustLoadTLSCreds(cfg.GRPC.Certs.CaPath, cfg.GRPC.Certs.CertPath, cfg.GRPC.Certs.KeyPath)
+
 	gRPCServer := grpc.NewServer(grpc.ChainUnaryInterceptor(
 		recovery.UnaryServerInterceptor(recoveryOpts...),
 		logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
-	))
+	), grpc.Creds(creds))
 
-	// create private server
-	creds := mustLoadTLSCreds(cfg.GRPC.Certs.CaPath, cfg.GRPC.Certs.CertPath, cfg.GRPC.Certs.KeyPath)
+	service.Register(gRPCServer, s)
 
-	privateGrpcServer := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			recovery.UnaryServerInterceptor(recoveryOpts...),
-			logging.UnaryServerInterceptor(InterceptorLogger(log), loggingOpts...),
-		),
-		grpc.Creds(creds),
-	)
-
-	public.Register(gRPCServer, s)
-	private.Register(privateGrpcServer, privateS)
-
-	// Start public gRPC server
+	// Start gRPC server
 	go func() {
 		l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.Port))
 		if err != nil {
@@ -115,21 +101,6 @@ func main() {
 		}
 	}()
 
-	// Start private gRPC server
-	go func() {
-		l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.PrivatePort))
-		if err != nil {
-			log.Error("failed to listen", slog.String("error", err.Error()))
-		}
-
-		log.Info("Starting private gRPC server", slog.String("port", fmt.Sprintf(":%d", cfg.GRPC.PrivatePort)))
-
-		if err := privateGrpcServer.Serve(l); err != nil {
-			log.Error("failed to serve", slog.String("error", err.Error()))
-		}
-
-	}()
-
 	// Graceful shutdown
 	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
@@ -137,8 +108,7 @@ func main() {
 	<-stop
 
 	gRPCServer.GracefulStop()
-	privateGrpcServer.GracefulStop()
-	log.Info("Gracefully stopped 2 services")
+	log.Info("Gracefully stopped service")
 }
 
 // InterceptorLogger adapts slog logger to interceptor logger.

@@ -1,7 +1,6 @@
 env: "local"
 grpc:
   port: 44044
-  private_port: 44045
   certs:
     ca_path: ./configs/cert/ca-auth-cert.pem
     cert_path: ./configs/cert/server-auth-cert.pem

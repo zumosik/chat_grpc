@@ -16,7 +16,7 @@ import (
 // Client is a client for PRIVATE auth service
 type Client struct {
 	l      *slog.Logger
-	client auth.PrivateServiceClient
+	client auth.AuthServiceClient
 }
 
 func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Client, error) {
@@ -53,7 +53,7 @@ func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Clien
 		return nil, err
 	}
 
-	client := auth.NewPrivateServiceClient(conn)
+	client := auth.NewAuthServiceClient(conn)
 
 	c := &Client{
 		client: client,
@@ -66,7 +66,7 @@ func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Clien
 }
 
 func (c *Client) GetUserByToken(ctx context.Context, token string) (*models.User, error) {
-	resp, err := c.client.GetUserByToken(ctx, &auth.PrivateGetUserByTokenRequest{
+	resp, err := c.client.GetUserByToken(ctx, &auth.GetUserByTokenRequest{
 		Token: &auth.Token{Token: []byte(token)},
 	})
 	if err != nil {
@@ -82,7 +82,7 @@ func (c *Client) GetUserByToken(ctx context.Context, token string) (*models.User
 }
 
 func (c *Client) GetUserByID(ctx context.Context, id string) (*models.User, error) {
-	resp, err := c.client.GetUserByID(ctx, &auth.PrivateGetUserByIDRequest{
+	resp, err := c.client.GetUserByID(ctx, &auth.GetUserByIDRequest{
 		Id: id,
 	})
 	if err != nil {

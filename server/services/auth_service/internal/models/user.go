@@ -17,8 +17,9 @@ type User struct {
 }
 
 // ToAuthUser converts the *User to an *auth.User
-func (u *User) ToAuthUser() *auth.PublicUser {
-	return &auth.PublicUser{
+func (u *User) ToAuthUser() *auth.User {
+	return &auth.User{
+		Id:       u.ID,
 		Username: u.Username,
 		Email:    u.Email,
 		Verified: u.ConfirmedEmail,

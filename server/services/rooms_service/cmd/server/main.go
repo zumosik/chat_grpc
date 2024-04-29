@@ -87,7 +87,7 @@ func main() {
 
 	service.Register(gRPCServer, serv)
 
-	// Start private gRPC server
+	// Start gRPC server
 	go func() {
 		l, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.GRPC.Port))
 		if err != nil {

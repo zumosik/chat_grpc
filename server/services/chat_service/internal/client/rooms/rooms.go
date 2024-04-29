@@ -1,4 +1,4 @@
-package auth
+package rooms
 
 import (
 	"chat_service/internal/config"
@@ -6,24 +6,19 @@ import (
 	"context"
 	"crypto/tls"
 	"crypto/x509"
-	"github.com/zumosik/grpc_chat_protos/go/auth"
+	"github.com/zumosik/grpc_chat_protos/go/rooms"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"log/slog"
 	"os"
 )
 
-// Client is a client for PRIVATE auth service
-type Client struct {
+type PrivateClient struct {
 	l      *slog.Logger
-	client auth.AuthServiceClient
+	client rooms.RoomServiceClient
 }
 
-func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Client, error) {
-
-	//log.Error("failed to load credentials", slog.String("error", err.Error()))
-
-	// Load CA cert
+func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*PrivateClient, error) {
 	pemServerCA, err := os.ReadFile(certCfg.CaPath)
 	if err != nil {
 		log.Error("failed to load CA cert", slog.String("error", err.Error()))
@@ -48,35 +43,45 @@ func Connect(log *slog.Logger, addr string, certCfg *config.CertsConfig) (*Clien
 	}
 
 	conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(credentials.NewTLS(cfg)))
-
 	if err != nil {
 		return nil, err
 	}
 
-	client := auth.NewAuthServiceClient(conn)
+	client := rooms.NewRoomServiceClient(conn)
 
-	c := &Client{
+	c := &PrivateClient{
 		client: client,
 		l:      log,
 	}
 
-	log.Info("Connected to auth service", slog.String("address", addr))
+	log.Info("Connected to rooms service", slog.String("address", addr))
 
 	return c, nil
 }
 
-func (c *Client) AuthenticateUser(ctx context.Context, token []byte) (*models.User, error) {
-	resp, err := c.client.GetUserByToken(ctx, &auth.GetUserByTokenRequest{
-		Token: &auth.Token{Token: token},
+func (c *PrivateClient) GetUserRooms(ctx context.Context, userID string) ([]*models.Room, error) {
+	resp, err := c.client.GetRoomsByUserID(ctx, &rooms.GetRoomsByUserIDRequest{
+		UserId: userID,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	return &models.User{
-		ID:             resp.User.Id,
-		Username:       resp.User.Username,
-		Email:          resp.User.Email,
-		ConfirmedEmail: resp.User.Verified,
-	}, nil
+	res := make([]*models.Room, 0, len(resp.GetRooms()))
+
+	for i, r := range resp.GetRooms() {
+		ids := make([]string, 0, len(r.GetUsers()))
+		for j, u := range r.GetUsers() {
+			ids[j] = u.GetId()
+		}
+
+		res[i] = &models.Room{
+			ID:        r.GetId(),
+			Name:      r.GetName(),
+			UserIDS:   ids,
+			CreatedBy: r.GetCreatedBy().GetId(),
+		}
+	}
+
+	return res, nil
 }
